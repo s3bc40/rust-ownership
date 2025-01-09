@@ -2,6 +2,8 @@
 // There can only be one owner at a time.
 // When the owner goes out of scope, the value will be dropped.
 
+use core::slice;
+
 fn main() {
     let mut s = String::from("hello");
 
@@ -88,9 +90,50 @@ fn main() {
     // where they are last used, which is before the mutable reference r3 is created.
     // These scopes don’t overlap, so this code is allowed: the compiler can tell that the reference
     // is no longer being used at a point before the end of the scope.
-} // Here, x goes out of scope, then s. But because s's value was moved, nothing
-  // special happens.
 
+    // Slices
+    let prim_slice = String::from("hello world");
+    let word = first_word(&prim_slice); // word will get the value 5
+    println!("First word index is {word}");
+    s.clear(); // this empties the String, making it equal to ""
+    println!("After clear, first word index is {word}");
+
+    // String slices
+    let str_slice = String::from("hello world");
+
+    let hello = &str_slice[0..5];
+    let world = &str_slice[6..11];
+    println!("{hello}, {world}");
+    let slice_start = &s[..2]; //&s[0..2];
+    let slice_end = &s[3..]; // &s[3..len];
+    let slice_all = &s[..]; // &s[0..len];
+
+    let my_string = String::from("hello world");
+
+    // `first_word` works on slices of `String`s, whether partial or whole
+    let word = first_word(&my_string[0..6]);
+    let word = first_word(&my_string[..]);
+    // `first_word` also works on references to `String`s, which are equivalent
+    // to whole slices of `String`s
+    let word = first_word(&my_string);
+
+    let my_string_literal = "hello world";
+
+    // `first_word` works on slices of string literals, whether partial or whole
+    let word = first_word(&my_string_literal[0..6]);
+    let word = first_word(&my_string_literal[..]);
+
+    // Because string literals *are* string slices already,
+    // this works too, without the slice syntax!
+    let word = first_word(my_string_literal);
+
+    // Other slices
+    let a = [1, 2, 3, 4, 5];
+
+    let slice = &a[1..3];
+
+    assert_eq!(slice, &[2, 3]);
+}
 fn takes_ownership(some_string: String) {
     // some_string comes into scope
     println!("{some_string}");
@@ -109,4 +152,17 @@ fn calculate_length(s: &String) -> usize {
 
 fn change(some_string: &mut String) {
     some_string.push_str(", world");
+}
+
+// Slices
+fn first_word(s: &str) -> &str {
+    let bytes = s.as_bytes();
+
+    for (i, &item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &s[0..i];
+        }
+    }
+
+    &s[..]
 }
